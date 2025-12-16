@@ -5,7 +5,8 @@ A special birthday wish website created with love.
 ## How to View
 ### Online
 Visit the live link here: [https://vkwizz.github.io/bdaywish/](https://vkwizz.github.io/bdaywish/)
-*(Note: Ensure GitHub Pages is enabled in the repository settings)*
+*(Note: Ensure your repository is **Public** for free hosting. Go to Settings > General > Danger Zone to change visibility)*
+
 
 ### Local
 1. Clone the repository.

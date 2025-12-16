@@ -1,5 +1,141 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    // --- Intro Overlay Logic ---
+    const overlay = document.getElementById('intro-overlay');
+
+    if (overlay) {
+        const phrases = [
+            "love you da ❤️",
+            "sorry vaveee 🥺",
+            "miss you da 💖",
+            "good morning muthe ☀️",
+            "my cutiee koraaa 😽",
+            "ente chundari vavaya 💃",
+            "sir paavama 🥺",
+            "kutapiiiiii 💕",
+            "shemikeda kutttapi 🙏",
+            "ummmma 😘",
+            "my world 🌍",
+            "mine 💍"
+        ];
+
+        // Prevent scrolling
+        document.body.style.overflow = 'hidden';
+
+        const duration = 1500; // 6 seconds
+        const spawnInterval = 100; // New message every 100ms
+        let intervalId;
+
+        function createSpamMessage() {
+            const msg = document.createElement('div');
+            msg.classList.add('spam-msg');
+            msg.innerText = phrases[Math.floor(Math.random() * phrases.length)];
+
+            // Random Position
+            const x = Math.random() * (window.innerWidth - 100); // subtract approx width
+            const y = Math.random() * (window.innerHeight - 50); // subtract approx height
+
+            msg.style.left = `${x}px`;
+            msg.style.top = `${y}px`;
+
+            // Random Color Removed - enforced pink in CSS
+            // const hue = Math.random() * 360;
+            // msg.style.backgroundColor = `hsla(${hue}, 70%, 60%, 0.8)`;
+
+            overlay.appendChild(msg);
+        }
+
+        // --- Background Music Logic ---
+        // --- Background Music Logic ---
+        const audio = document.getElementById('bg-music');
+        if (audio) {
+            audio.volume = 1.0;
+
+            const tryPlay = () => {
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log("Autoplay blocked. Waiting for interaction.");
+                    });
+                }
+            };
+
+            // Attempt immediately
+            tryPlay();
+
+            // Re-attempt on any user interaction (essential for iOS)
+            const unlockAudio = () => {
+                if (audio.paused) {
+                    audio.play().then(() => {
+                        // Remove listeners once playing
+                        document.removeEventListener('click', unlockAudio);
+                        document.removeEventListener('touchstart', unlockAudio);
+                        document.removeEventListener('scroll', unlockAudio);
+                        document.removeEventListener('keydown', unlockAudio);
+                    }).catch(e => console.error(e));
+                }
+            };
+
+            document.addEventListener('click', unlockAudio);
+            document.addEventListener('touchstart', unlockAudio);
+            document.addEventListener('scroll', unlockAudio);
+            document.addEventListener('keydown', unlockAudio);
+        }
+
+        // Start spamming
+        intervalId = setInterval(createSpamMessage, spawnInterval);
+
+        // Start spamming
+        intervalId = setInterval(createSpamMessage, spawnInterval);
+
+        // --- End Spam & Show "Tap to Open" ---
+        setTimeout(() => {
+            clearInterval(intervalId);
+
+            // Smoothly fade out all existing messages
+            const messages = document.querySelectorAll('.spam-msg');
+            messages.forEach(msg => {
+                msg.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
+                msg.style.opacity = '0';
+                msg.style.transform = 'scale(1.5)'; // Slight expansion effect
+            });
+
+            // Add Blur Effect (CSS transition handles smoothness)
+            overlay.classList.add('overlay-blur');
+
+            // Create "Tap to begin" message
+            const prompt = document.createElement('div');
+            prompt.classList.add('tap-prompt');
+            prompt.innerText = "Tap anywhere ❤️";
+            overlay.appendChild(prompt);
+
+            // Clean up DOM after fade out
+            setTimeout(() => {
+                messages.forEach(msg => msg.remove());
+            }, 1000);
+
+            // One-time click to unlock everything
+            const unlockSite = () => {
+                // Play Music
+                if (audio) {
+                    audio.play().catch(e => console.log("Audio play failed:", e));
+                }
+
+                // Fade out overlay
+                overlay.style.opacity = '0';
+                document.body.style.overflow = '';
+
+                setTimeout(() => {
+                    overlay.remove();
+                }, 1000);
+            };
+
+            // Listen for click anywhere on the overlay
+            overlay.addEventListener('click', unlockSite);
+
+        }, duration);
+    }
+
 
 
     // Intersection Observer for Quotes (Staggered)
