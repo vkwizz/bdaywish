@@ -1,9 +1,107 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- Intro Overlay Logic ---
+    // --- Interactive Dialogue Flow ---
     const overlay = document.getElementById('intro-overlay');
+    const audio = document.getElementById('bg-music');
+    if (audio) audio.volume = 1.0;
 
     if (overlay) {
+        initDialogueFlow(overlay, audio);
+    }
+
+    function initDialogueFlow(overlay, audio) {
+        // Prevent scrolling
+        document.body.style.overflow = 'hidden';
+
+        // Helper to play music on first interaction (iOS require interaction)
+        const playMusic = () => {
+            if (audio && audio.paused) {
+                audio.play().catch(e => console.log("Audio autoplay failed:", e));
+            }
+        };
+
+        // Clear existing content
+        overlay.innerHTML = '';
+
+        // Create Dialogue Container
+        const container = document.createElement('div');
+        container.className = 'dialogue-card';
+        overlay.appendChild(container);
+
+        // --- Step 1 ---
+        showStep1();
+
+        function showStep1() {
+            container.innerHTML = `
+                <div class="dialogue-text">Are you ready for your surprise? 🎁</div>
+                <div class="dialogue-buttons">
+                    <button class="btn-choice btn-yes">Yes! 😍</button>
+                    <button class="btn-choice btn-no">No 🙈</button>
+                </div>
+            `;
+
+            const btnYes = container.querySelector('.btn-yes');
+            const btnNo = container.querySelector('.btn-no');
+
+            // "No" Action
+            btnNo.addEventListener('click', () => {
+                playMusic(); // Try playing music
+                container.classList.add('shake-animation');
+
+                // Temporary change text
+                const originalText = container.querySelector('.dialogue-text').innerText;
+                container.querySelector('.dialogue-text').innerText = "Angne paranja patoola! 😤";
+                container.querySelector('.dialogue-text').style.color = "#ff6b6b";
+
+                setTimeout(() => {
+                    container.classList.remove('shake-animation');
+                    container.querySelector('.dialogue-text').innerText = originalText;
+                    container.querySelector('.dialogue-text').style.color = "#fff";
+                }, 1200);
+            });
+
+            // "Yes" Action
+            btnYes.addEventListener('click', () => {
+                playMusic();
+                // Transition to Step 2
+                container.style.opacity = '0';
+                setTimeout(() => {
+                    showStep2();
+                    container.style.opacity = '1';
+                }, 300);
+            });
+        }
+
+        function showStep2() {
+            container.innerHTML = `
+                <div class="dialogue-text">Love youu muthe ❤️</div>
+                <div class="dialogue-buttons">
+                    <button class="btn-choice btn-primary" id="btn-love-too">Love you tooo 😘</button>
+                    <button class="btn-choice btn-no" id="btn-ayikotte">Ayikotte 😒</button>
+                </div>
+            `;
+
+            const btnLove = container.querySelector('#btn-love-too');
+            const btnAyikotte = container.querySelector('#btn-ayikotte');
+
+            // "Ayikotte" Action - Disappears
+            btnAyikotte.addEventListener('click', (e) => {
+                e.target.classList.add('hidden-btn');
+            });
+
+            // "Love you too" Action - Unlock Site
+            btnLove.addEventListener('click', () => {
+                // Transition to Spam Effect
+                container.style.opacity = '0';
+                setTimeout(() => {
+                    container.remove();
+                    startSpamEffect(overlay, audio);
+                }, 500);
+            });
+        }
+    }
+
+    function startSpamEffect(overlay, audio) {
         const phrases = [
             "love you da ❤️",
             "sorry vaveee 🥺",
@@ -19,10 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
             "mine 💍"
         ];
 
-        // Prevent scrolling
-        document.body.style.overflow = 'hidden';
-
-        const duration = 1500; // 6 seconds
+        const duration = 3500; // 1.5 seconds of spam
         const spawnInterval = 100; // New message every 100ms
         let intervalId;
 
@@ -32,63 +127,19 @@ document.addEventListener('DOMContentLoaded', () => {
             msg.innerText = phrases[Math.floor(Math.random() * phrases.length)];
 
             // Random Position
-            const x = Math.random() * (window.innerWidth - 100); // subtract approx width
-            const y = Math.random() * (window.innerHeight - 50); // subtract approx height
+            const x = Math.random() * (window.innerWidth - 100);
+            const y = Math.random() * (window.innerHeight - 50);
 
             msg.style.left = `${x}px`;
             msg.style.top = `${y}px`;
 
-            // Random Color Removed - enforced pink in CSS
-            // const hue = Math.random() * 360;
-            // msg.style.backgroundColor = `hsla(${hue}, 70%, 60%, 0.8)`;
-
             overlay.appendChild(msg);
         }
 
-        // --- Background Music Logic ---
-        // --- Background Music Logic ---
-        const audio = document.getElementById('bg-music');
-        if (audio) {
-            audio.volume = 1.0;
-
-            const tryPlay = () => {
-                const playPromise = audio.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        console.log("Autoplay blocked. Waiting for interaction.");
-                    });
-                }
-            };
-
-            // Attempt immediately
-            tryPlay();
-
-            // Re-attempt on any user interaction (essential for iOS)
-            const unlockAudio = () => {
-                if (audio.paused) {
-                    audio.play().then(() => {
-                        // Remove listeners once playing
-                        document.removeEventListener('click', unlockAudio);
-                        document.removeEventListener('touchstart', unlockAudio);
-                        document.removeEventListener('scroll', unlockAudio);
-                        document.removeEventListener('keydown', unlockAudio);
-                    }).catch(e => console.error(e));
-                }
-            };
-
-            document.addEventListener('click', unlockAudio);
-            document.addEventListener('touchstart', unlockAudio);
-            document.addEventListener('scroll', unlockAudio);
-            document.addEventListener('keydown', unlockAudio);
-        }
-
         // Start spamming
         intervalId = setInterval(createSpamMessage, spawnInterval);
 
-        // Start spamming
-        intervalId = setInterval(createSpamMessage, spawnInterval);
-
-        // --- End Spam & Show "Tap to Open" ---
+        // --- End Spam & Auto Unlock ---
         setTimeout(() => {
             clearInterval(intervalId);
 
@@ -97,28 +148,18 @@ document.addEventListener('DOMContentLoaded', () => {
             messages.forEach(msg => {
                 msg.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
                 msg.style.opacity = '0';
-                msg.style.transform = 'scale(1.5)'; // Slight expansion effect
+                msg.style.transform = 'scale(1.5)';
             });
 
-            // Add Blur Effect (CSS transition handles smoothness)
+            // Ensure Blur is there
             overlay.classList.add('overlay-blur');
 
-            // Create "Tap to begin" message
-            const prompt = document.createElement('div');
-            prompt.classList.add('tap-prompt');
-            prompt.innerText = "Tap anywhere ❤️";
-            overlay.appendChild(prompt);
-
-            // Clean up DOM after fade out
-            setTimeout(() => {
-                messages.forEach(msg => msg.remove());
-            }, 1000);
-
-            // One-time click to unlock everything
+            // Define unlock logic first
             const unlockSite = () => {
                 // Play Music
                 if (audio) {
-                    audio.play().catch(e => console.log("Audio play failed:", e));
+                    // Try to play; if blocked, it will just fail silently or log error
+                    audio.play().catch(e => console.log("Audio play failed (waiting for interaction):", e));
                 }
 
                 // Fade out overlay
@@ -130,7 +171,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 1000);
             };
 
-            // Listen for click anywhere on the overlay
+            // Clean up DOM after fade out AND Auto-Unlock
+            setTimeout(() => {
+                messages.forEach(msg => msg.remove());
+                unlockSite(); // Auto unlock attempt
+            }, 1000);
+
+            // Keep backup listener just in case auto-play fails heavily or user taps impatience
             overlay.addEventListener('click', unlockSite);
 
         }, duration);
